@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bingo Online - Sala Privada</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/peerjs@1.5.0/dist/peerjs.min.js"></script>
+<style>body{font-family:sans-serif}</style>
+</head>
+<body class="bg-[#0a0a0a] text-white min-h-screen">
+<div class="max-w-6xl mx-auto p-4">
+
+<div id="tela-home" class="min-h-[90vh] flex items-center justify-center">
+<div class="bg-white text-black rounded-[24px] p-7 w-full max-w-lg">
+<h1 class="text-4xl font-black">BINGO<span class="text-zinc-400">.ONLINE</span></h1>
+<p class="text-sm text-zinc-500 mt-1 mb-6">Crie sala privada. Só entra quem tem link.</p>
+<div id="home-criar">
+<label class="text-[11px] font-black">NOME DA SALA</label>
+<input id="inputNomeSala" class="w-full bg-zinc-100 rounded-xl p-3.5 mb-3 font-bold" value="Bingo da Galera">
+<div class="grid grid-cols-2 gap-3 mb-3">
+<div><label class="text-[11px] font-black">TOTAL CARTELAS</label><input id="inputTotal" type="number" value="24" class="w-full bg-zinc-100 rounded-xl p-3.5 font-bold"></div>
+<div><label class="text-[11px] font-black">LIMITE / JOGADOR</label><input id="inputLimite" type="number" value="1" class="w-full bg-zinc-100 rounded-xl p-3.5 font-bold"></div>
+</div>
+<label class="text-[11px] font-black">SEU NOME (ADMIN)</label>
+<input id="inputAdmin" class="w-full bg-zinc-100 rounded-xl p-3.5 mb-5 font-bold" placeholder="Seu nome">
+<button onclick="criarSala()" class="w-full bg-black text-white rounded-xl py-4 font-black">CRIAR SALA + GERAR LINK</button>
+</div>
+<div id="home-link" class="hidden">
+<div class="bg-zinc-100 rounded-xl p-4 mb-4">
+<p class="text-[11px] font-black">LINK PRIVADO:</p>
+<p id="txtLink" class="font-mono text-xs break-all bg-white p-3 rounded-lg border mt-2"></p>
+</div>
+<div class="grid grid-cols-2 gap-2">
+<button onclick="copiarWhats()" class="bg-[#25D366] text-black rounded-xl py-3.5 font-black">WhatsApp</button>
+<button onclick="entrarComoAdmin()" class="bg-black text-white rounded-xl py-3.5 font-black">ABRIR ADMIN</button>
+</div>
+</div>
+</div>
+</div>
+
+<div id="tela-sala" class="hidden">
+<div class="flex justify-between gap-3 mb-4">
+<div class="bg-white text-black rounded-2xl px-5 py-3 flex-1 flex justify-between items-center">
+<div><h2 id="nomeSalaDisplay" class="font-black"></h2><p id="codigoDisplay" class="text-[11px] font-mono"></p></div>
+<div class="text-right"><span id="statusConexao" class="text-[10px] bg-yellow-200 px-2 py-1 rounded-full font-bold">CONECTANDO...</span><p class="text-[11px] mt-1">Você: <b id="meuNomeDisplay"></b></p></div>
+</div>
+<button onclick="copiarLinkSala()" class="bg-zinc-800 rounded-2xl px-4 py-3 text-xs font-bold">COPIAR LINK</button>
+</div>
+
+<div id="modalNome" class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+<div class="bg-white text-black rounded-[20px] p-6 w-full max-w-sm"><h2 class="text-2xl font-black mb-1">Entrar</h2><p id="modalInfo" class="text-xs text-zinc-500 mb-4"></p><input id="modalInputNome" class="w-full bg-zinc-100 rounded-xl p-4 font-bold mb-4" placeholder="Seu nome"><button onclick="confirmarNome()" class="w-full bg-black text-white rounded-xl py-4 font-black">ENTRAR</button></div>
+</div>
+
+<div class="grid lg:grid-cols-3 gap-4">
+<div class="lg:col-span-2"><div class="bg-white text-black rounded-[20px] p-4"><div class="flex justify-between mb-3"><h3 class="font-black">CARTELAS</h3><div class="flex gap-2 text-[11px]"><span id="livresCount" class="bg-zinc-100 px-2 py-1 rounded-full font-bold"></span><span id="meuLimiteTxt" class="bg-black text-white px-2 py-1 rounded-full font-bold"></span></div></div><div id="gridCartelas" class="grid grid-cols-2 gap-2 max-h-[68vh] overflow-auto"></div></div></div>
+<div class="space-y-4">
+<div id="painelAdmin" class="hidden bg-white text-black rounded-[20px] p-4"><h3 class="font-black mb-2">ADMIN - JOGADORES</h3><div id="listaJogadores" class="space-y-2"></div><hr class="my-4"><div class="flex gap-2"><button onclick="iniciarPartida()" class="flex-1 bg-black text-white rounded-xl py-3 font-black text-sm">INICIAR</button><button onclick="sortearNumero()" class="flex-1 bg-yellow-400 text-black rounded-xl py-3 font-black text-sm">SORTEAR</button></div></div>
+<div class="bg-white text-black rounded-[20px] p-4"><h3 class="font-black mb-2">MINHA ÁREA</h3><div id="minhasCartelasLista" class="space-y-2 mb-3"></div><div class="flex gap-2 mb-3"><button onclick="setCor('#ef4444')" class="w-9 h-9 rounded-full bg-red-500"></button><button onclick="setCor('#22c55e')" class="w-9 h-9 rounded-full bg-green-500"></button><button onclick="setCor('#3b82f6')" class="w-9 h-9 rounded-full bg-blue-500"></button><button onclick="setCor('#eab308')" class="w-9 h-9 rounded-full bg-yellow-500"></button></div><button id="btnPronto" onclick="ficarPronto()" class="w-full bg-black text-white rounded-xl py-3.5 font-black">ESTOU PRONTO</button><p id="txtPronto" class="hidden text-center font-black text-green-600 mt-2">✅ PRONTO</p></div>
+<div class="bg-[#1a1a1a] border border-zinc-800 rounded-[20px] p-4"><h3 class="font-black mb-2 text-zinc-400 text-xs">SORTEIO AO VIVO</h3><div id="ultimoNumero" class="text-7xl font-black text-center py-4 bg-white text-black rounded-xl mb-3">--</div><p class="text-[11px] text-zinc-500 mb-1"><span id="totalSorteados">0</span> / 75</p><div id="bolasSorteadas" class="flex flex-wrap gap-1.5"></div></div>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+let peer=null, connAdmin=null, conexoes={}, souAdmin=false, codigoSala=null, meuId=null, meuNome=null, corEscolhida='#ef4444';
+let estadoSala={nome:'', total:24, limitePadrao:1, cartelas:[], jogadores:[], numerosSorteados:[], status:'lobby'};
+function genCartelas(total){const cartelas=[];for(let i=0;i<total;i++){const nums=[...Array(75).keys()].map(n=>n+1).sort(()=>0.5-Math.random()).slice(0,24);const grid=[];let idx=0;for(let r=0;r<5;r++){let row=[];for(let c=0;c<5;c++){if(r==2&&c==2)row.push('X');else row.push(nums[idx++]);}grid.push(row);}cartelas.push({id:i+1, numero:String(i+1).padStart(4,'0'), grid, donoId:null, donoNome:null});}return cartelas;}
+function getLimite(j){return j.limite!=null?j.limite:estadoSala.limitePadrao;}
+function criarSala(){const nome=document.getElementById('inputNomeSala').value||'Bingo';const total=parseInt(document.getElementById('inputTotal').value)||24;const limite=parseInt(document.getElementById('inputLimite').value)||1;const adminNome=document.getElementById('inputAdmin').value||'Admin';const codigo=Math.random().toString(36).substring(2,7).toUpperCase()+'-'+Math.random().toString(36).substring(2,4).toUpperCase();estadoSala={nome, total, limitePadrao:limite, cartelas:genCartelas(total), jogadores:[{id:'admin-'+codigo, nome:adminNome, limite:null, status:'pronto', cor:'#22c55e', cartelas:[]}], numerosSorteados:[], status:'lobby', codigo};peer=new Peer('bingo-'+codigo);peer.on('open', id=>{codigoSala=codigo;souAdmin=true;meuId='admin-'+codigo;meuNome=adminNome;const link=location.origin+location.pathname+'?sala='+codigo;document.getElementById('txtLink').innerText=link;document.getElementById('home-criar').classList.add('hidden');document.getElementById('home-link').classList.remove('hidden');window._linkSala=link;peer.on('connection', conn=>{conn.on('open', ()=>{conexoes[conn.peer]=conn;conn.on('data', data=>handleDataAdmin(data, conn));conn.on('close', ()=>{delete conexoes[conn.peer];broadcastEstado();});conn.send({type:'estado', estado:estadoSala});});});});}
+function copiarWhats(){const t=`🎲 Entra no meu Bingo!\nSala: ${estadoSala.nome}\nLink: ${window._linkSala}`;navigator.clipboard.writeText(t);alert('Copiado');}
+function entrarComoAdmin(){location.href=location.pathname+'?sala='+codigoSala+'&admin=1';}
+const params=new URLSearchParams(location.search);
+if(params.get('sala')){document.getElementById('tela-home').classList.add('hidden');document.getElementById('tela-sala').classList.remove('hidden');codigoSala=params.get('sala');if(params.get('admin')==='1'){const saved=localStorage.getItem('bingo_estado_'+codigoSala);if(saved){estadoSala=JSON.parse(saved);souAdmin=true;meuId='admin-'+codigoSala;meuNome=estadoSala.jogadores[0].nome;iniciarPeerAdmin();}else{alert('Admin precisa criar novamente');location.href=location.pathname;}}else{iniciarPeerJogador();}document.getElementById('codigoDisplay').innerText='Sala: '+codigoSala;}
+function iniciarPeerAdmin(){if(peer)return;peer=new Peer('bingo-'+codigoSala);peer.on('open', ()=>{document.getElementById('statusConexao').innerText='ADMIN ONLINE';document.getElementById('statusConexao').className='text-[10px] bg-green-400 text-black px-2 py-1 rounded-full font-bold';document.getElementById('painelAdmin').classList.remove('hidden');document.getElementById('modalNome').classList.add('hidden');document.getElementById('meuNomeDisplay').innerText=meuNome;document.getElementById('nomeSalaDisplay').innerText=estadoSala.nome;peer.on('connection', conn=>{conexoes[conn.peer]=conn;conn.on('open', ()=>{conn.on('data', data=>handleDataAdmin(data, conn));conn.send({type:'estado', estado:estadoSala});});});render();});}
+function iniciarPeerJogador(){document.getElementById('modalInfo').innerText='Sala privada: '+codigoSala;peer=new Peer();peer.on('open', myId=>{meuId=myId;connAdmin=peer.connect('bingo-'+codigoSala);connAdmin.on('open', ()=>{document.getElementById('statusConexao').innerText='CONECTADO';document.getElementById('statusConexao').className='text-[10px] bg-green-400 text-black px-2 py-1 rounded-full font-bold';connAdmin.on('data', data=>handleDataJogador(data));});connAdmin.on('close', ()=>{document.getElementById('statusConexao').innerText='ADMIN OFF';});});}
+function confirmarNome(){const nome=document.getElementById('modalInputNome').value.trim();if(!nome)return;meuNome=nome;document.getElementById('meuNomeDisplay').innerText=nome;document.getElementById('modalNome').classList.add('hidden');if(souAdmin){render();}else{if(connAdmin)connAdmin.send({type:'entrar', nome, id:meuId});}}
+function handleDataAdmin(data, conn){if(data.type==='entrar'){let j=estadoSala.jogadores.find(x=>x.id===data.id);if(!j){j={id:data.id, nome:data.nome, limite:null, status:'pendente', cor:'#ef4444', cartelas:[]};estadoSala.jogadores.push(j);}broadcastEstado();}if(data.type==='reservar'){toggleCartelaServer(data.cartId, data.jogId);}if(data.type==='pronto'){const j=estadoSala.jogadores.find(x=>x.id===data.jogId);if(j){j.status='pronto';j.cor=data.cor;}broadcastEstado();}if(data.type==='cor'){const j=estadoSala.jogadores.find(x=>x.id===data.jogId);if(j)j.cor=data.cor;broadcastEstado();}}
+function toggleCartelaServer(cartId, jogId){const cart=estadoSala.cartelas.find(c=>c.id===cartId);const jog=estadoSala.jogadores.find(j=>j.id===jogId);if(!cart||!jog)return;if(cart.donoId&&cart.donoId!==jogId)return;if(cart.donoId===jogId){cart.donoId=null;cart.donoNome=null;jog.cartelas=jog.cartelas.filter(id=>id!==cartId);}else{if(jog.cartelas.length>=getLimite(jog))return;cart.donoId=jogId;cart.donoNome=jog.nome;jog.cartelas.push(cartId);}jog.status='pendente';broadcastEstado();}
+function broadcastEstado(){localStorage.setItem('bingo_estado_'+codigoSala, JSON.stringify(estadoSala));Object.values(conexoes).forEach(c=>{try{c.send({type:'estado', estado:estadoSala});}catch(e){}});render();}
+function handleDataJogador(data){if(data.type==='estado'){estadoSala=data.estado;document.getElementById('nomeSalaDisplay').innerText=estadoSala.nome;render();}}
+function toggleCartela(id){if(souAdmin){toggleCartelaServer(id, meuId);}else{connAdmin.send({type:'reservar', cartId:id, jogId:meuId});}}
+function setCor(cor){corEscolhida=cor;if(souAdmin){const j=estadoSala.jogadores.find(x=>x.id===meuId);if(j)j.cor=cor;broadcastEstado();}else{connAdmin.send({type:'cor', cor, jogId:meuId});}}
+function ficarPronto(){if(souAdmin){const j=estadoSala.jogadores.find(x=>x.id===meuId);if(j)j.status='pronto';broadcastEstado();}else{connAdmin.send({type:'pronto', jogId:meuId, cor:corEscolhida});}}
+function addLimite(jogId, delta){const j=estadoSala.jogadores.find(x=>x.id===jogId);const atual=j.limite!=null?j.limite:estadoSala.limitePadrao;let n=atual+delta;if(n<1)n=1;if(n>10)n=10;j.limite=n;broadcastEstado();}
+function iniciarPartida(){estadoSala.status='jogando';broadcastEstado();alert('Partida iniciada!');}
+function sortearNumero(){const todos=[...Array(75).keys()].map(n=>n+1);const disp=todos.filter(n=>!estadoSala.numerosSorteados.includes(n));if(!disp.length){alert('Acabou');return;}const num=disp[Math.floor(Math.random()*disp.length)];estadoSala.numerosSorteados.push(num);broadcastEstado();if('vibrate' in navigator)navigator.vibrate(300);}
+function copiarLinkSala(){const link=location.origin+location.pathname+'?sala='+codigoSala;navigator.clipboard.writeText(link);alert('Link copiado');}
+function render(){if(!estadoSala.cartelas)return;const eu=souAdmin?estadoSala.jogadores.find(j=>j.id===meuId):estadoSala.jogadores.find(j=>j.id===meuId);if(!eu&&!souAdmin)return;const jogadorAtual=eu||{cartelas:[], id:meuId};document.getElementById('livresCount').innerText=`${estadoSala.cartelas.filter(c=>!c.donoId).length} livres`;document.getElementById('meuLimiteTxt').innerText=`Meu limite: ${eu?getLimite(eu):estadoSala.limitePadrao}`;const grid=document.getElementById('gridCartelas');grid.innerHTML='';estadoSala.cartelas.forEach(cart=>{const ocupada=cart.donoId&&cart.donoId!==meuId;const minha=cart.donoId===meuId;const div=document.createElement('div');div.className=`rounded-xl p-2 border-2 cursor-pointer ${minha?'bg-green-100 border-green-600':'bg-zinc-50 border-zinc-200'} ${ocupada?'opacity-40 pointer-events-none':''}`;let html=`<div class='flex justify-between text-[10px] font-black mb-1'><span>${cart.numero}</span><span class='truncate'>${cart.donoNome?cart.donoNome.substring(0,8):'LIVRE'}</span></div><div class='grid grid-cols-5 gap-[1px] text-[9px] font-bold'>`;for(let l of ['B','I','N','G','O'])html+=`<div class='bg-zinc-800 text-white text-center py-[2px]'>${l}</div>`;cart.grid.forEach(row=>{row.forEach(v=>{const marcado=estadoSala.numerosSorteados.includes(v);html+=`<div class='border bg-white text-center py-1 ${v==='X'?'bg-zinc-200':''} ${marcado&&v!=='X'?'bg-yellow-300':''}'>${v}</div>`;});});html+=`</div>`;div.innerHTML=html;div.onclick=()=>toggleCartela(cart.id);grid.appendChild(div);});const minhasDiv=document.getElementById('minhasCartelasLista');if(minhasDiv){minhasDiv.innerHTML='';(jogadorAtual.cartelas||[]).forEach(id=>{const c=estadoSala.cartelas.find(x=>x.id===id);if(c)minhasDiv.innerHTML+=`<div class='flex justify-between text-xs bg-zinc-100 rounded-lg p-2'><span>Cartela ${c.numero}</span><button onclick='toggleCartela(${c.id})' class='text-red-500 font-bold'>X</button></div>`;});}if(souAdmin){const lj=document.getElementById('listaJogadores');lj.innerHTML='';estadoSala.jogadores.forEach(j=>{const pronto=j.status==='pronto';lj.innerHTML+=`<div class='flex items-center justify-between p-2 rounded-xl ${pronto?'bg-green-100 border border-green-400':'bg-red-100 border border-red-400'}'><div class='flex items-center gap-2'><div class='w-2 h-2 rounded-full ${pronto?'bg-green-600':'bg-red-600'}'></div><span class='text-sm font-bold'>${j.nome}</span><span class='text-[10px]'>${j.cartelas.length}/${getLimite(j)}</span></div><div class='flex gap-1'><button onclick='addLimite("${j.id}",1)' class='bg-white border px-2 py-1 rounded text-[10px] font-bold'>+1</button><button onclick='addLimite("${j.id}",-1)' class='bg-white border px-2 py-1 rounded text-[10px]'>-1</button></div></div>`;});}const btn=document.getElementById('btnPronto');const txt=document.getElementById('txtPronto');if(eu&&eu.status==='pronto'){btn.classList.add('hidden');txt.classList.remove('hidden');}else{btn.classList.remove('hidden');txt.classList.add('hidden');if(eu)btn.disabled=(eu.cartelas.length===0);}document.getElementById('ultimoNumero').innerText=estadoSala.numerosSorteados.length?estadoSala.numerosSorteados[estadoSala.numerosSorteados.length-1]:'--';document.getElementById('totalSorteados').innerText=estadoSala.numerosSorteados.length;document.getElementById('bolasSorteadas').innerHTML=estadoSala.numerosSorteados.map(n=>`<span class='bg-white text-black px-2.5 py-1 rounded-full text-xs font-black'>${n}</span>`).join('');}
+</script>
+</body>
+</html>
